@@ -1,0 +1,38 @@
+@import "tailwindcss";
+
+/* Soft & calm: sage, lavender, warm off-white. Nothing red or alarming. */
+:root {
+  --background: #faf8f3;
+  --surface: #ffffff;
+  --foreground: #2f3a33;
+  --muted: #6b766e;
+  --sage: #6f9178;
+  --sage-dark: #57755f;
+  --sage-light: #e6eee7;
+  --lavender: #b4a7d6;
+  --lavender-light: #efebf8;
+  --amber: #a86b1f;
+  --amber-light: #fbf1e1;
+  --border: #e5e2da;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-sage: var(--sage);
+  --color-sage-dark: var(--sage-dark);
+  --color-sage-light: var(--sage-light);
+  --color-lavender: var(--lavender);
+  --color-lavender-light: var(--lavender-light);
+  --color-amber: var(--amber);
+  --color-amber-light: var(--amber-light);
+  --color-border: var(--border);
+  --font-sans: var(--font-nunito);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}

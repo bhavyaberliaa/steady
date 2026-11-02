@@ -4,6 +4,7 @@ import { ConfirmDelete } from "@/components/confirm-delete";
 import { requireUser } from "@/lib/auth";
 import { deleteAffirmation } from "../actions";
 import { getMyAffirmation } from "../data";
+import { StarButton } from "../star-button";
 
 const DATE = new Intl.DateTimeFormat("en-US", { dateStyle: "medium" });
 
@@ -24,9 +25,12 @@ export default async function AffirmationPage({ params }: { params: Promise<{ id
       </Link>
 
       <article className="rounded-3xl bg-lavender-light p-8">
-        <p className="text-sm font-semibold text-muted">
-          {affirmation.triggerEmoji} {affirmation.triggerName}
-        </p>
+        <div className="flex items-start justify-between gap-2">
+          <p className="text-sm font-semibold text-muted">
+            {affirmation.triggerEmoji} {affirmation.triggerName}
+          </p>
+          <StarButton id={affirmation.id} starred={affirmation.starred} />
+        </div>
         <p className="mt-3 text-2xl font-bold leading-snug">{affirmation.text}</p>
         {affirmation.note && (
           <p className="mt-4 border-l-4 border-lavender pl-3 text-muted">{affirmation.note}</p>

@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, varchar, smallint, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, varchar, smallint, timestamp, primaryKey } from "drizzle-orm/pg-core";
 
 // One row per account. Passwords are never stored, only their bcrypt hash.
 export const users = pgTable("users", {
@@ -44,3 +44,19 @@ export const affirmations = pgTable("affirmations", {
 });
 
 export type Affirmation = typeof affirmations.$inferSelect;
+
+// Junction table: which users starred which affirmations. One row per star,
+// and the pair (user, affirmation) can only appear once.
+export const stars = pgTable(
+  "stars",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    affirmationId: uuid("affirmation_id")
+      .notNull()
+      .references(() => affirmations.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [primaryKey({ columns: [table.userId, table.affirmationId] })],
+);

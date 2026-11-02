@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
-import { affirmations, triggers } from "@/db/schema";
+import { affirmations, stars, triggers } from "@/db/schema";
 import { requireUser } from "@/lib/auth";
 import {
   hasErrors,
@@ -97,4 +97,25 @@ export async function deleteAffirmation(formData: FormData) {
   }
   revalidatePath("/affirmations");
   redirect("/affirmations");
+}
+
+// Stars or un-stars one of this user's affirmations.
+export async function setStar(affirmationId: string, starred: boolean) {
+  const user = await requireUser();
+  if (!isUuid(affirmationId)) return;
+
+  if (starred) {
+    // Only your own affirmations can be starred.
+    const [own] = await db
+      .select({ id: affirmations.id })
+      .from(affirmations)
+      .where(and(eq(affirmations.id, affirmationId), eq(affirmations.userId, user.id)));
+    if (!own) return;
+    await db.insert(stars).values({ userId: user.id, affirmationId }).onConflictDoNothing();
+  } else {
+    await db.delete(stars).where(and(eq(stars.userId, user.id), eq(stars.affirmationId, affirmationId)));
+  }
+
+  revalidatePath("/affirmations");
+  revalidatePath("/starred");
 }

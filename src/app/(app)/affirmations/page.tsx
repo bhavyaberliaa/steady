@@ -1,22 +1,11 @@
 import Link from "next/link";
-import { desc, eq } from "drizzle-orm";
-import { db } from "@/db";
-import { affirmations, triggers } from "@/db/schema";
 import { requireUser } from "@/lib/auth";
+import { AffirmationList } from "./affirmation-list";
+import { listMyAffirmations } from "./data";
 
 export default async function AffirmationsPage() {
   const user = await requireUser();
-  const mine = await db
-    .select({
-      id: affirmations.id,
-      text: affirmations.text,
-      triggerName: triggers.name,
-      triggerEmoji: triggers.emoji,
-    })
-    .from(affirmations)
-    .innerJoin(triggers, eq(triggers.id, affirmations.triggerId))
-    .where(eq(affirmations.userId, user.id))
-    .orderBy(desc(affirmations.createdAt));
+  const mine = await listMyAffirmations(user.id);
 
   return (
     <div className="space-y-8">
@@ -38,21 +27,7 @@ export default async function AffirmationsPage() {
           Nothing here yet. Write your first one: something true you&apos;d want to hear on a hard day.
         </p>
       ) : (
-        <ul className="space-y-3">
-          {mine.map((a) => (
-            <li key={a.id}>
-              <Link
-                href={`/affirmations/${a.id}`}
-                className="block rounded-2xl border border-border bg-surface p-5 transition hover:border-sage"
-              >
-                <p className="text-lg">{a.text}</p>
-                <p className="mt-2 text-sm text-muted">
-                  {a.triggerEmoji} {a.triggerName}
-                </p>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <AffirmationList items={mine} />
       )}
     </div>
   );

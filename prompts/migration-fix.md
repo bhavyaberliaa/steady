@@ -33,3 +33,18 @@ The log had no actual error: `drizzle-kit migrate` hides the database's error me
 | `DATABASE_URL` missing | "DATABASE_URL is not set." ✅ |
 | Host that doesn't exist | `ENOTFOUND` + hint ✅ |
 | Real Supabase pooler, made-up project | "tenant/user … not found" + hint ✅ (this also proves the SSL connection to Supabase works) |
+
+## Follow-up: the real error (Issue #9)
+
+With #8 merged, the next build said exactly what was wrong:
+
+```
+Migration failed: password authentication failed for user "postgres"
+Error code: 28P01
+```
+
+The password I'd pasted into Vercel's `DATABASE_URL` was wrong. I asked:
+
+> can you not do this for me? all the steps?
+
+The agent said it won't type, reset, or paste passwords into my accounts. Instead it suggested connecting Supabase through **Vercel → Storage**, which fills in the connection string (`POSTGRES_URL`) automatically, so nobody copies a password by hand. The app now uses `POSTGRES_URL` when it's set and falls back to `DATABASE_URL` locally. Checked: local migrate still works, `POSTGRES_URL` takes priority, and Supabase's extra URL options (`?sslmode=…&supa=…`) don't break the connection.

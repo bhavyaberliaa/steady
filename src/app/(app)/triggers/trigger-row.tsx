@@ -5,7 +5,9 @@ import { ConfirmDelete } from "@/components/confirm-delete";
 import { deleteTrigger } from "./actions";
 import { TriggerForm } from "./trigger-form";
 
-export function TriggerRow({ trigger }: { trigger: { id: string; name: string; emoji: string } }) {
+type TriggerWithCount = { id: string; name: string; emoji: string; affirmationCount: number };
+
+export function TriggerRow({ trigger }: { trigger: TriggerWithCount }) {
   const [editing, setEditing] = useState(false);
   const stopEditing = useCallback(() => setEditing(false), []);
 
@@ -23,7 +25,12 @@ export function TriggerRow({ trigger }: { trigger: { id: string; name: string; e
         <span className="text-2xl" aria-hidden>
           {trigger.emoji}
         </span>
-        {trigger.name}
+        <span>
+          {trigger.name}
+          <span className="block text-xs font-normal text-muted">
+            {trigger.affirmationCount === 1 ? "1 affirmation" : `${trigger.affirmationCount} affirmations`}
+          </span>
+        </span>
       </span>
       <span className="flex items-center gap-1">
         <button
@@ -33,7 +40,14 @@ export function TriggerRow({ trigger }: { trigger: { id: string; name: string; e
         >
           Edit
         </button>
-        <ConfirmDelete action={deleteTrigger} id={trigger.id} label={trigger.name} />
+        {trigger.affirmationCount === 0 ? (
+          <ConfirmDelete action={deleteTrigger} id={trigger.id} label={trigger.name} />
+        ) : (
+          // Deleting would orphan its affirmations, so it waits until they're moved or deleted.
+          <span className="px-3 text-xs text-muted" title="Move or delete its affirmations first">
+            In use
+          </span>
+        )}
       </span>
     </li>
   );

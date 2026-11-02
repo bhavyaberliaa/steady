@@ -1,6 +1,6 @@
-import { asc, eq } from "drizzle-orm";
+import { asc, count, eq } from "drizzle-orm";
 import { db } from "@/db";
-import { triggers } from "@/db/schema";
+import { affirmations, triggers } from "@/db/schema";
 import { requireUser } from "@/lib/auth";
 import { TriggerForm } from "./trigger-form";
 import { TriggerRow } from "./trigger-row";
@@ -8,9 +8,16 @@ import { TriggerRow } from "./trigger-row";
 export default async function TriggersPage() {
   const user = await requireUser();
   const mine = await db
-    .select({ id: triggers.id, name: triggers.name, emoji: triggers.emoji })
+    .select({
+      id: triggers.id,
+      name: triggers.name,
+      emoji: triggers.emoji,
+      affirmationCount: count(affirmations.id),
+    })
     .from(triggers)
+    .leftJoin(affirmations, eq(affirmations.triggerId, triggers.id))
     .where(eq(triggers.userId, user.id))
+    .groupBy(triggers.id)
     .orderBy(asc(triggers.createdAt));
 
   return (

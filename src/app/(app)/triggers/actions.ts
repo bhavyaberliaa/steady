@@ -56,6 +56,11 @@ export async function deleteTrigger(formData: FormData) {
   const user = await requireUser();
   const id = String(formData.get("id") ?? "");
 
-  await db.delete(triggers).where(and(eq(triggers.id, id), eq(triggers.userId, user.id)));
+  try {
+    await db.delete(triggers).where(and(eq(triggers.id, id), eq(triggers.userId, user.id)));
+  } catch (error) {
+    // 23503: affirmations still use this trigger. The page hides Delete then, so leave it be.
+    if ((error as { cause?: { code?: string } }).cause?.code !== "23503") throw error;
+  }
   revalidatePath("/triggers");
 }

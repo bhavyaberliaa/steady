@@ -1,8 +1,8 @@
 import { defineConfig } from "drizzle-kit";
-import { connectionConfig } from "./src/db/connection";
+import { connectionConfig, databaseUrl } from "./src/db/connection";
 
 // drizzle-kit takes SSL settings only with separate fields, not with a URL.
-const url = new URL(process.env.DATABASE_URL!);
+const url = new URL(databaseUrl()!);
 const { ssl } = connectionConfig(url.toString());
 
 export default defineConfig({

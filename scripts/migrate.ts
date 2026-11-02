@@ -4,18 +4,18 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { Pool } from "pg";
-import { connectionConfig } from "../src/db/connection";
+import { connectionConfig, databaseUrl } from "../src/db/connection";
 
 const HINTS: Record<string, string> = {
-  "28P01": "Wrong database password. Check the password in DATABASE_URL (no [ ] brackets).",
+  "28P01": "Wrong database password. On Vercel, connect Supabase under Storage so POSTGRES_URL is set for you.",
   XX000: "Supabase couldn't match the user. Copy the Transaction pooler string again; the user should look like postgres.<project-ref>.",
-  ENOTFOUND: "The database host wasn't found. Check DATABASE_URL was copied whole; special characters in the password must be URL-encoded.",
+  ENOTFOUND: "The database host wasn't found. Check the connection string was copied whole.",
   ECONNREFUSED: "Nothing is listening at that address. Locally, start the database with `npm run db:local`.",
 };
 
 async function main() {
-  const url = process.env.DATABASE_URL;
-  if (!url) throw Object.assign(new Error("DATABASE_URL is not set."), { code: "NO_URL" });
+  const url = databaseUrl();
+  if (!url) throw Object.assign(new Error("Neither POSTGRES_URL nor DATABASE_URL is set."), { code: "NO_URL" });
 
   const { hostname, port } = new URL(url);
   console.log(`Migrating database at ${hostname}:${port || 5432} …`);

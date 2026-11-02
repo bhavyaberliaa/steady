@@ -2,13 +2,7 @@ import "server-only";
 import { and, asc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { affirmations, triggers } from "@/db/schema";
-
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-// Only ids shaped like a uuid reach the database; anything else is "not found".
-export function isUuid(value: string) {
-  return UUID_PATTERN.test(value);
-}
+import { isUuid } from "@/lib/validation";
 
 export async function getMyTriggers(userId: string) {
   return db

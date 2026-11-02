@@ -1,14 +1,20 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { and, eq } from "drizzle-orm";
+import { and, eq, ne } from "drizzle-orm";
 import { db } from "@/db";
 import { triggers } from "@/db/schema";
 import { requireUser } from "@/lib/auth";
+import { isUuid, validateTriggerName } from "@/lib/validation";
 
-export type TriggerState = { error?: string; saved?: number };
-
-const NAME_MAX = 40;
+// `saved` changes after a save (the form clears); `attempt` after a problem
+// (the form redraws with what was typed, kept in `values`).
+export type TriggerState = {
+  error?: string;
+  saved?: number;
+  attempt?: number;
+  values?: { name: string; emoji: string };
+};
 
 function readForm(formData: FormData) {
   return {
@@ -17,17 +23,21 @@ function readForm(formData: FormData) {
   };
 }
 
-function checkName(name: string): string | undefined {
-  if (!name) return "Give this trigger a name, like \"Can't sleep\".";
-  if (name.length > NAME_MAX) return `Keep the name under ${NAME_MAX} characters.`;
+// The user's other trigger names, to catch duplicates.
+async function otherNames(userId: string, exceptId?: string) {
+  const rows = await db
+    .select({ name: triggers.name })
+    .from(triggers)
+    .where(and(eq(triggers.userId, userId), exceptId ? ne(triggers.id, exceptId) : undefined));
+  return rows.map((row) => row.name);
 }
 
 export async function createTrigger(_prev: TriggerState, formData: FormData): Promise<TriggerState> {
   const user = await requireUser();
   const { name, emoji } = readForm(formData);
 
-  const error = checkName(name);
-  if (error) return { error };
+  const error = validateTriggerName(name, await otherNames(user.id));
+  if (error) return { error, values: { name, emoji }, attempt: Date.now() };
 
   await db.insert(triggers).values({ userId: user.id, name, emoji });
   revalidatePath("/triggers");
@@ -39,9 +49,10 @@ export async function updateTrigger(_prev: TriggerState, formData: FormData): Pr
   const user = await requireUser();
   const id = String(formData.get("id") ?? "");
   const { name, emoji } = readForm(formData);
+  if (!isUuid(id)) return { error: "That trigger doesn't exist anymore." };
 
-  const error = checkName(name);
-  if (error) return { error };
+  const error = validateTriggerName(name, await otherNames(user.id, id));
+  if (error) return { error, values: { name, emoji }, attempt: Date.now() };
 
   // Matching on user_id too means nobody can edit someone else's trigger by guessing its id.
   await db
@@ -56,6 +67,7 @@ export async function deleteTrigger(formData: FormData) {
   const user = await requireUser();
   const id = String(formData.get("id") ?? "");
 
+  if (!isUuid(id)) return;
   try {
     await db.delete(triggers).where(and(eq(triggers.id, id), eq(triggers.userId, user.id)));
   } catch (error) {

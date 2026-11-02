@@ -6,17 +6,38 @@ import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { affirmations, triggers } from "@/db/schema";
 import { requireUser } from "@/lib/auth";
-import { isUuid } from "./data";
+import {
+  hasErrors,
+  isUuid,
+  validateAffirmation,
+  type AffirmationInput,
+  type FieldErrors,
+} from "@/lib/validation";
 
-export type AffirmationState = { error?: string };
+// On a problem, send back the messages and what was typed, so nothing is lost.
+// `attempt` changes every time, which tells the form to redraw with those values.
+export type AffirmationState = {
+  errors?: FieldErrors<keyof AffirmationInput>;
+  values?: AffirmationInput;
+  attempt?: number;
+};
 
 function readForm(formData: FormData) {
   return {
     id: String(formData.get("id") ?? ""),
     text: String(formData.get("text") ?? "").trim(),
     triggerId: String(formData.get("triggerId") ?? ""),
-    note: String(formData.get("note") ?? "").trim() || null,
+    note: String(formData.get("note") ?? "").trim(),
   };
+}
+
+// Checks the rules, then that the chosen trigger is one of this user's own.
+async function check(userId: string, values: AffirmationInput): Promise<AffirmationState | undefined> {
+  const errors = validateAffirmation(values);
+  if (!errors.triggerId && !(await ownsTrigger(userId, values.triggerId))) {
+    errors.triggerId = "Please pick one of your triggers.";
+  }
+  if (hasErrors(errors)) return { errors, values, attempt: Date.now() };
 }
 
 // The chosen trigger has to be one of this user's own.
@@ -35,11 +56,12 @@ export async function createAffirmation(
 ): Promise<AffirmationState> {
   const user = await requireUser();
   const { text, triggerId, note } = readForm(formData);
-  if (!(await ownsTrigger(user.id, triggerId))) return { error: "Please pick one of your triggers." };
+  const problem = await check(user.id, { text, triggerId, note });
+  if (problem) return problem;
 
   const [created] = await db
     .insert(affirmations)
-    .values({ userId: user.id, triggerId, text, note })
+    .values({ userId: user.id, triggerId, text, note: note || null })
     .returning({ id: affirmations.id });
 
   revalidatePath("/affirmations");
@@ -53,12 +75,13 @@ export async function updateAffirmation(
   const user = await requireUser();
   const { id, text, triggerId, note } = readForm(formData);
   if (!isUuid(id)) redirect("/affirmations");
-  if (!(await ownsTrigger(user.id, triggerId))) return { error: "Please pick one of your triggers." };
+  const problem = await check(user.id, { text, triggerId, note });
+  if (problem) return problem;
 
   // Matching on user_id too means nobody can edit someone else's affirmation by guessing its id.
   await db
     .update(affirmations)
-    .set({ text, triggerId, note, updatedAt: new Date() })
+    .set({ text, triggerId, note: note || null, updatedAt: new Date() })
     .where(and(eq(affirmations.id, id), eq(affirmations.userId, user.id)));
 
   revalidatePath("/affirmations");

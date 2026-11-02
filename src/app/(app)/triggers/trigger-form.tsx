@@ -15,6 +15,8 @@ export function TriggerForm(props: Props) {
     {},
   );
   const existing = props.mode === "edit" ? props.trigger : undefined;
+  // After a problem, show what was typed; otherwise the saved values (or blanks).
+  const values = state.values ?? existing;
   const onDone = props.mode === "edit" ? props.onDone : undefined;
 
   // After a successful edit, close the edit form.
@@ -23,17 +25,17 @@ export function TriggerForm(props: Props) {
   }, [state.saved, onDone]);
 
   return (
-    // Changing the key after a save resets the fields for the next trigger.
-    <form key={state.saved} action={formAction} className="space-y-3" noValidate>
+    // A new key redraws the form: blank after a save, or with what was typed after a problem.
+    <form key={state.saved ?? state.attempt} action={formAction} className="space-y-3" noValidate>
       {existing && <input type="hidden" name="id" value={existing.id} />}
 
       <label className="block">
         <span className="text-sm font-semibold">Name</span>
         <input
           name="name"
-          defaultValue={existing?.name}
+          defaultValue={values?.name}
+          aria-invalid={Boolean(state.error)}
           placeholder="e.g. Before a presentation"
-          maxLength={40}
           className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 outline-none focus:border-sage focus:ring-2 focus:ring-sage-light"
         />
       </label>
@@ -47,7 +49,7 @@ export function TriggerForm(props: Props) {
                 type="radio"
                 name="emoji"
                 value={emoji}
-                defaultChecked={emoji === (existing?.emoji ?? EMOJIS[0])}
+                defaultChecked={emoji === (values?.emoji ?? EMOJIS[0])}
                 className="peer sr-only"
               />
               <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-border text-xl peer-checked:border-sage peer-checked:bg-sage-light peer-focus-visible:ring-2 peer-focus-visible:ring-sage">

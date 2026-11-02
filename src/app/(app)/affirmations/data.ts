@@ -1,7 +1,8 @@
 import "server-only";
-import { and, asc, desc, eq, isNotNull, sql } from "drizzle-orm";
+import { and, asc, desc, eq, ilike, isNotNull, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { affirmations, stars, triggers } from "@/db/schema";
+import { likePattern, type ListQuery } from "@/lib/list-query";
 import { isUuid } from "@/lib/validation";
 
 // True when the joined star row exists.
@@ -44,8 +45,18 @@ function myStar(userId: string) {
 
 export type AffirmationListItem = Awaited<ReturnType<typeof listMyAffirmations>>[number];
 
-// This user's affirmations, newest first, each marked starred or not.
-export async function listMyAffirmations(userId: string, { starredOnly = false } = {}) {
+const ORDER = {
+  newest: [desc(affirmations.createdAt)],
+  oldest: [asc(affirmations.createdAt)],
+  az: [asc(sql`lower(${affirmations.text})`), desc(affirmations.createdAt)],
+};
+
+// This user's affirmations, each marked starred or not. Search, filters and
+// sort only ever narrow or reorder the user's own rows.
+export async function listMyAffirmations(
+  userId: string,
+  { q = "", triggerId, starredOnly = false, sort = "newest" }: Partial<ListQuery> = {},
+) {
   return db
     .select({
       id: affirmations.id,
@@ -57,6 +68,13 @@ export async function listMyAffirmations(userId: string, { starredOnly = false }
     .from(affirmations)
     .innerJoin(triggers, eq(triggers.id, affirmations.triggerId))
     .leftJoin(stars, myStar(userId))
-    .where(and(eq(affirmations.userId, userId), starredOnly ? isNotNull(stars.affirmationId) : undefined))
-    .orderBy(desc(affirmations.createdAt));
+    .where(
+      and(
+        eq(affirmations.userId, userId),
+        q ? ilike(affirmations.text, likePattern(q)) : undefined,
+        triggerId ? eq(affirmations.triggerId, triggerId) : undefined,
+        starredOnly ? isNotNull(stars.affirmationId) : undefined,
+      ),
+    )
+    .orderBy(...ORDER[sort]);
 }

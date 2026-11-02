@@ -1,5 +1,9 @@
+import { existsSync } from "node:fs";
 import { defineConfig } from "drizzle-kit";
 import { connectionConfig, databaseUrl } from "./src/db/connection";
+
+// Locally, `npm run db:generate` needs DATABASE_URL from .env.local.
+if (existsSync(".env.local")) process.loadEnvFile(".env.local");
 
 // drizzle-kit takes SSL settings only with separate fields, not with a URL.
 const url = new URL(databaseUrl()!);

@@ -13,3 +13,16 @@ export const users = pgTable("users", {
 });
 
 export type User = typeof users.$inferSelect;
+
+// A mood or situation, e.g. "Can't sleep" 🌙. Affirmations are grouped by trigger.
+export const triggers = pgTable("triggers", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  emoji: text("emoji").notNull().default("🌿"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type Trigger = typeof triggers.$inferSelect;

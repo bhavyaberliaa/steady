@@ -29,6 +29,13 @@
       "when": 1793597123095,
       "tag": "0003_create_stars",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793822664052,
+      "tag": "0004_create_weekly_plans",
+      "breakpoints": true
     }
   ]
 }

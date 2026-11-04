@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, varchar, smallint, timestamp, primaryKey } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, varchar, smallint, timestamp, primaryKey, jsonb } from "drizzle-orm/pg-core";
 
 // One row per account. Passwords are never stored, only their bcrypt hash.
 export const users = pgTable("users", {
@@ -60,3 +60,21 @@ export const stars = pgTable(
   },
   (table) => [primaryKey({ columns: [table.userId, table.affirmationId] })],
 );
+
+export type Priority = { title: string; why: string };
+
+// Claude's latest plan for the user's week: top 3 priorities (in the user's
+// chosen order) and a calm note. One row per user; "Try again" replaces it.
+export const weeklyPlans = pgTable("weekly_plans", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .notNull()
+    .unique()
+    .references(() => users.id, { onDelete: "cascade" }),
+  priorities: jsonb("priorities").$type<Priority[]>().notNull(),
+  calmNote: text("calm_note").notNull(),
+  // The affirmation the note quotes; cleared if that affirmation is deleted.
+  affirmationId: uuid("affirmation_id").references(() => affirmations.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});

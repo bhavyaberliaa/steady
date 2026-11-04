@@ -2,13 +2,19 @@ import { headers } from "next/headers";
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { getMyWeek } from "@/lib/briefing";
+import { aiConfigured } from "@/lib/prioritize";
+import { getMyPlan } from "@/lib/weekly-plan";
+import { PlanPanel } from "./plan-panel";
 
 const LINK = "font-semibold text-sage-dark hover:underline";
 
 export default async function WeekPage() {
   const user = await requireUser();
   const fallbackTimeZone = (await headers()).get("x-vercel-ip-timezone") ?? "UTC";
-  const week = await getMyWeek(user.id, new Date(), fallbackTimeZone);
+  const [week, plan] = await Promise.all([
+    getMyWeek(user.id, new Date(), fallbackTimeZone),
+    getMyPlan(user.id),
+  ]);
 
   return (
     <div className="space-y-8">
@@ -41,6 +47,20 @@ export default async function WeekPage() {
 
       {week.status === "ok" && (
         <>
+          <PlanPanel
+            plan={plan}
+            aiReady={aiConfigured()}
+            madeLabel={
+              plan
+                ? new Intl.DateTimeFormat("en-US", {
+                    timeZone: week.timeZone,
+                    weekday: "short",
+                    hour: "numeric",
+                    minute: "2-digit",
+                  }).format(plan.createdAt)
+                : ""
+            }
+          />
           <p className="text-sm text-muted">
             {week.total === 0 ? "Nothing scheduled. A quiet week." : `${week.total} ${week.total === 1 ? "event" : "events"}`} ·
             times in {week.timeZone.replaceAll("_", " ")}

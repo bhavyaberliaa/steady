@@ -49,3 +49,11 @@ export function validateTriggerName(name: string, existingNames: string[] = []):
 export function hasErrors(errors: object) {
   return Object.keys(errors).length > 0;
 }
+
+// Briefing day from a form: 0 (Sunday) to 6 (Saturday), anything else is refused.
+export function parseBriefingDay(value: unknown): number | undefined {
+  const day = Number(value);
+  return typeof value === "string" && value !== "" && Number.isInteger(day) && day >= 0 && day <= 6
+    ? day
+    : undefined;
+}

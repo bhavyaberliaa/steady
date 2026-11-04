@@ -7,6 +7,8 @@ const NAV = [
   { href: "/affirmations", label: "Affirmations" },
   { href: "/starred", label: "Starred" },
   { href: "/triggers", label: "Triggers" },
+  { href: "/week", label: "Your week" },
+  { href: "/settings", label: "Settings" },
 ];
 
 // Every page in this group is private: visitors are sent to /login.
@@ -15,12 +17,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <>
-      <header className="flex items-center justify-between gap-4 border-b border-border bg-surface px-4 py-3 sm:px-8">
-        <div className="flex items-center gap-6">
+      <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-border bg-surface px-4 py-3 sm:px-8">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
           <Link href="/" className="text-lg font-bold text-sage-dark">
             Steady
           </Link>
-          <nav className="flex gap-4 text-sm font-semibold text-muted">
+          <nav className="flex flex-wrap gap-x-4 gap-y-1 text-sm font-semibold text-muted">
             {NAV.map((item) => (
               <Link key={item.href} href={item.href} className="hover:text-sage-dark">
                 {item.label}

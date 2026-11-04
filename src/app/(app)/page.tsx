@@ -1,13 +1,31 @@
+import { headers } from "next/headers";
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
+import { dayKey, pickForDay } from "@/lib/daily";
 import { getDashboardStats } from "@/lib/dashboard";
+import { listMyAffirmations } from "./affirmations/data";
+import { DailyCard } from "./daily-card";
 import { TriggerChart } from "./trigger-chart";
 
 const LINK = "font-semibold text-sage-dark hover:underline";
 
-export default async function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
   const user = await requireUser();
-  const stats = await getDashboardStats(user.id);
+  const [stats, mine, { another }, headerList] = await Promise.all([
+    getDashboardStats(user.id),
+    listMyAffirmations(user.id),
+    searchParams,
+    headers(),
+  ]);
+  // Vercel tells us the visitor's timezone, so "today" flips at their midnight.
+  const day = dayKey(new Date(), headerList.get("x-vercel-ip-timezone") ?? undefined);
+  const n = Number(another);
+  const step = Number.isSafeInteger(n) && n > 0 ? n : 0;
+  const daily = pickForDay(mine, { userId: user.id, day, step });
 
   if (stats.total === 0) {
     return (
@@ -30,8 +48,10 @@ export default async function HomePage() {
 
   return (
     <div className="space-y-8">
+      {daily && <DailyCard affirmation={daily} step={step} total={mine.length} />}
+
       <div>
-        <h1 className="text-2xl font-bold">Your dashboard</h1>
+        <h2 className="text-2xl font-bold">Your dashboard</h2>
         <p className="mt-1 text-muted">Where you&apos;re putting your energy.</p>
       </div>
 

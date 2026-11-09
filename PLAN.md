@@ -136,6 +136,23 @@ Soft and calm. Muted sage green as the main color, lavender for accents, warm of
 
 *Added after the build (Issue #29). Everything above this line is the original plan, unchanged.*
 
+### Summary
+
+| Planned feature | Shipped / Changed / Cut | Status (Done/Backlogged) | Learning | What changed and why (one line) |
+|---|---|---|---|---|
+| 1. Sign up and login | Shipped | Done | Building my own login was less work than wiring a provider, and it made "every account is a row in `users`" literally true. | Nothing: email + password, bcrypt, encrypted cookie, as planned (PR #4). |
+| 2. Triggers (data model) | Shipped | Done | A relationship needs a rule for deletes, not just a foreign key. | Added an emoji picker, and a trigger can't be deleted while affirmations use it (PR #12). |
+| 3. Affirmations CRUD | Shipped | Done | "Each user sees only their own data" has to hold for URLs too, not just lists. | As planned; opening someone else's affirmation by URL shows "not found" (PR #14). |
+| 4. Validation | Changed | Done | "Required" was only the start: lengths, duplicates and forged form values all needed rules. | More rules than planned: length limits, no duplicate trigger names, only your own trigger can be picked (PR #16). |
+| 5. Stars | Shipped | Done | One junction table with a two-column primary key makes double-starring impossible. | As planned; the star fills instantly, then saves (PR #18). |
+| 6. Find things | Shipped | Done | Keeping search and filter choices in the URL makes reload and Back work. | As planned (PR #20). |
+| 7. Dashboard | Shipped | Done | The chart had to be redesigned for phone width. | As planned, on the Home page, with horizontal bars so names stay readable (PR #22). |
+| 8. Affirmation of the day | Changed | Done | "Random" had to be defined: random per day, not per page load. | A fixed shuffle per user per day, so it doesn't change on reload; "Give me another" shows each one before repeating (PR #24). |
+| 9. Weekly briefing | Changed | Done in code; live site waits on Google keys in Vercel | Outside APIs bring setup work (OAuth client, test users, token expiry) that isn't code. | Your week is always in the header instead of only on the briefing day; plain `fetch` instead of `googleapis` (PR #26). |
+| 10. AI prioritize + calm note | Shipped (not cut) | Done in code; live site waits on `ANTHROPIC_API_KEY` | AI output has to be checked before it's saved, like any other user input. | Built instead of cut; the quoted affirmation is always read from my own data, never trusted from Claude (PR #28). |
+| Hosting: Replit Deployments | Changed | Done | Check the hosting limits before planning around a platform. | Moved to Vercel + Supabase because Replit's free plan refused to deploy (PRs #6, #8, #10). |
+| `weekly_briefings` table | Changed | Done | Store only what you can't fetch again. | Became `weekly_plans` with no stored events, since events are fetched live from Google (PR #28). |
+
 **Hosting and process**
 
 | area | planned | what actually happened | why |

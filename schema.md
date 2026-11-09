@@ -136,6 +136,20 @@ Migration `0004_create_weekly_plans.sql`
 | a trigger | **refused** while any affirmation still uses it; the app only offers Delete when its count is 0 |
 | an affirmation | its stars are deleted; a plan quoting it keeps the plan but loses the quote (set null) |
 
+## Compared with the plan
+
+Did the agent build what [PLAN.md section 3](PLAN.md#3-database) designed?
+
+| table | planned | built | match? |
+|---|---|---|---|
+| `users` | id, email, password_hash, display_name, briefing_day, google_refresh_token, created_at | same columns | ✅ The refresh token is also encrypted before saving, which the plan didn't say. |
+| `triggers` | id, user_id, name, emoji, created_at | same columns | ✅ Plus a rule the plan didn't have: a trigger can't be deleted while affirmations use it. |
+| `affirmations` | id, user_id, trigger_id, text (max 280), note, created_at, updated_at | same columns; `text` is `varchar(280)` so the database enforces the limit too | ✅ |
+| `stars` | user_id + affirmation_id as the primary key, created_at | same | ✅ |
+| `weekly_briefings` | id, user_id, week_start, events (JSON), priorities (JSON), calm_note, affirmation_id, created_at; one per user per week | **renamed `weekly_plans`**: one row per user (the latest plan), no `week_start`, no `events` | ❌ Changed. Events are fetched live from Google every time, so storing them would only go stale, and "Try again" and reordering only need the latest plan. |
+
+Plan types vs real types: the plan said "text (uuid)" and "date"; the database uses real `uuid` and `timestamptz` (date + time + timezone) columns. "number" for `briefing_day` became `smallint`.
+
 ## Not stored in the database
 
 - **Calendar events** are fetched from Google each time Your week opens and are never saved.

@@ -25,7 +25,9 @@ export default async function TriggersPage() {
       <div>
         <h1 className="text-2xl font-bold">Triggers</h1>
         <p className="mt-1 text-muted">
-          The moments that are hard for you. Each affirmation you write will belong to one.
+          A trigger is a moment that&apos;s hard for you, like &ldquo;Before a presentation&rdquo; or &ldquo;Can&apos;t
+          sleep&rdquo;. Each affirmation you write belongs to one, so the right words are easy to find when that
+          moment comes.
         </p>
       </div>
 

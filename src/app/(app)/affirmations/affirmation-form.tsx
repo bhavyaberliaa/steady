@@ -15,9 +15,11 @@ const FIELD =
 export function AffirmationForm({
   triggers,
   existing,
+  defaultTriggerId,
 }: {
   triggers: TriggerOption[];
   existing?: Existing;
+  defaultTriggerId?: string;
 }) {
   const [state, formAction, pending] = useActionState<AffirmationState, FormData>(
     existing ? updateAffirmation : createAffirmation,
@@ -26,7 +28,7 @@ export function AffirmationForm({
   // After a failed save, show what was typed; otherwise the saved values (or blanks).
   const values = state.values ?? {
     text: existing?.text ?? "",
-    triggerId: existing?.triggerId ?? "",
+    triggerId: existing?.triggerId ?? defaultTriggerId ?? "",
     note: existing?.note ?? "",
   };
   const errors = state.errors ?? {};

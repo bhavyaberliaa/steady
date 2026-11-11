@@ -14,6 +14,8 @@ export type TriggerState = {
   saved?: number;
   attempt?: number;
   values?: { name: string; emoji: string };
+  // The trigger just added, so the form can point to writing an affirmation for it.
+  created?: { id: string; name: string };
 };
 
 function readForm(formData: FormData) {
@@ -39,10 +41,12 @@ export async function createTrigger(_prev: TriggerState, formData: FormData): Pr
   const error = validateTriggerName(name, await otherNames(user.id));
   if (error) return { error, values: { name, emoji }, attempt: Date.now() };
 
-  await db.insert(triggers).values({ userId: user.id, name, emoji });
+  const [row] = await db.insert(triggers).values({ userId: user.id, name, emoji }).returning({ id: triggers.id });
   revalidatePath("/triggers");
+  // The New affirmation page shows this form when you have no triggers yet.
+  revalidatePath("/affirmations/new");
   // A new number each time tells the form to clear itself.
-  return { saved: Date.now() };
+  return { saved: Date.now(), created: { id: row.id, name } };
 }
 
 export async function updateTrigger(_prev: TriggerState, formData: FormData): Promise<TriggerState> {

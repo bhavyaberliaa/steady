@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useEffect } from "react";
 import { createTrigger, updateTrigger, type TriggerState } from "./actions";
 
@@ -84,6 +85,18 @@ export function TriggerForm(props: Props) {
           </button>
         )}
       </div>
+
+      {state.created && (
+        <p role="status" className="rounded-xl bg-sage-light px-3 py-2 text-sm">
+          Added “{state.created.name}”.{" "}
+          <Link
+            href={`/affirmations/new?trigger=${state.created.id}`}
+            className="font-semibold text-sage-dark underline-offset-2 hover:underline"
+          >
+            Now write an affirmation for it →
+          </Link>
+        </p>
+      )}
     </form>
   );
 }

@@ -15,12 +15,13 @@ const COPY = {
     switchHref: "/login",
   },
   login: {
-    title: "Welcome back",
-    subtitle: "Take a breath. Let's see what's ahead.",
+    // Most people who land here are new, so say what Steady is, not "Welcome back".
+    title: "Log in to Steady",
+    subtitle: "A quiet place for the affirmations you write for hard moments, and a calm look at your week.",
     button: "Log in",
     pending: "Logging in…",
-    switchText: "New here?",
-    switchLink: "Create an account",
+    switchText: "First time here?",
+    switchLink: "Create a free account",
     switchHref: "/signup",
   },
 };
@@ -78,12 +79,25 @@ export function AuthForm({ mode }: { mode: "signup" | "login" }) {
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-muted">
-          {copy.switchText}{" "}
-          <Link href={copy.switchHref} className="font-semibold text-sage-dark hover:underline">
-            {copy.switchLink}
-          </Link>
-        </p>
+        {mode === "login" ? (
+          // A full-size button, so first-time visitors don't miss it.
+          <div className="mt-6 border-t border-border pt-6 text-center">
+            <p className="text-sm text-muted">{copy.switchText}</p>
+            <Link
+              href={copy.switchHref}
+              className="mt-2 block w-full rounded-xl border-2 border-sage px-4 py-2.5 font-semibold text-sage-dark transition hover:bg-sage-light"
+            >
+              {copy.switchLink}
+            </Link>
+          </div>
+        ) : (
+          <p className="mt-6 text-center text-sm text-muted">
+            {copy.switchText}{" "}
+            <Link href={copy.switchHref} className="font-semibold text-sage-dark hover:underline">
+              {copy.switchLink}
+            </Link>
+          </p>
+        )}
       </div>
     </main>
   );
